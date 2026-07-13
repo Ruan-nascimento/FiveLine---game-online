@@ -1,0 +1,1 @@
+export default function TermsPage() { return <article className="prose page-shell narrow"><h1>Termos de uso</h1><p>Use o Linha 5 de forma respeitosa. Não tente manipular partidas, contas ou infraestrutura. O jogo não oferece prêmios, apostas, ranking ou compras neste MVP.</p></article>; }
