@@ -1,48 +1,68 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { BoardMark } from "@/components/brand/BoardMark";
+import { GoogleGlyph } from "@/components/brand/GoogleGlyph";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { APP_NAME } from "@/lib/constants/app";
 
-type FormMode = "login" | "signup" | "reset";
-
-export function AuthForm({ mode }: { mode: FormMode }): React.ReactElement {
-  const router = useRouter();
+export function AuthForm(): React.ReactElement {
+  const searchParams = useSearchParams();
   const [message, setMessage] = useState<string | null>(null);
-  const [isError, setIsError] = useState(false);
   const [pending, setPending] = useState(false);
-  const title = mode === "login" ? "Entre na sua conta" : mode === "signup" ? "Crie sua conta" : "Recupere sua senha";
 
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const signInWithGoogle = async () => {
     const supabase = createClient();
-    if (!supabase) { setIsError(true); setMessage("O Supabase ainda não está configurado neste ambiente."); return; }
-    const values = new FormData(event.currentTarget);
-    const email = String(values.get("email") ?? "").trim();
-    const password = String(values.get("password") ?? "");
-    const username = String(values.get("username") ?? "").trim().toLowerCase();
-    setPending(true); setMessage(null);
-    try {
-      if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        router.push(new URLSearchParams(window.location.search).get("next") || "/multiplayer"); router.refresh();
-      } else if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password, options: { data: { username }, emailRedirectTo: `${window.location.origin}/entrar` } });
-        if (error) throw error;
-        setIsError(false); setMessage("Conta criada. Verifique seu e-mail para confirmar o acesso.");
-      } else {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/entrar` });
-        if (error) throw error;
-        setIsError(false); setMessage("Se o e-mail existir, enviaremos as instruções de recuperação.");
-      }
-    } catch (error) { setIsError(true); setMessage(error instanceof Error ? error.message : "Não foi possível concluir a operação."); }
-    finally { setPending(false); }
+    if (!supabase) {
+      setMessage("O Supabase ainda não está configurado neste ambiente.");
+      return;
+    }
+    setPending(true);
+    setMessage(null);
+    const next = searchParams.get("next") || "/multiplayer";
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
+    });
+    if (error) {
+      const providerDisabled =
+        error.message.toLowerCase().includes("provider is not enabled") ||
+        error.message.toLowerCase().includes("unsupported provider");
+      setMessage(
+        providerDisabled
+          ? "O login com Google ainda não está habilitado no Supabase. Ative o provedor Google em Authentication → Providers e configure as credenciais OAuth."
+          : error.message,
+      );
+      setPending(false);
+    }
   };
 
-  return <section className="auth-card"><p className="eyebrow">{mode === "login" ? "Bem-vindo de volta" : "Multiplayer e histórico"}</p><h1>{title}</h1><p className="muted">{mode === "login" ? "Use sua conta para jogar online." : mode === "signup" ? "Escolha um nome único para aparecer nas partidas." : "Informe seu e-mail para receber um link seguro."}</p>
-    <form className="form-stack" onSubmit={submit}>{mode === "signup" ? <label>Nome de usuário<input name="username" minLength={3} maxLength={24} pattern="[a-zA-Z0-9_]+" required autoComplete="username" /></label> : null}<label>E-mail<input name="email" type="email" required autoComplete="email" /></label>{mode !== "reset" ? <label>Senha<input name="password" type="password" minLength={8} required autoComplete={mode === "login" ? "current-password" : "new-password"} /></label> : null}{message ? <p className={`form-message ${isError ? "" : "form-success"}`}>{message}</p> : null}<button className="button primary large" disabled={pending || !isSupabaseConfigured()}>{pending ? "Aguarde…" : mode === "login" ? "Entrar" : mode === "signup" ? "Criar conta" : "Enviar instruções"}</button></form>
-    <p className="muted">{mode === "login" ? <><Link className="text-link" href="/recuperar-senha">Esqueci minha senha</Link><br />Ainda não tem conta? <Link className="text-link" href="/cadastrar">Cadastre-se</Link></> : <><Link className="text-link" href="/entrar">Voltar para entrar</Link></>}</p>
-  </section>;
+  return (
+    <section className="auth-card">
+      <p className="brand-lockup compact">
+        <BoardMark size={28} />
+        <span>{APP_NAME}</span>
+      </p>
+      <h1>Entre para jogar online</h1>
+      <p className="muted">
+        Use sua conta Google para multiplayer, salas e histórico. Contra a IA você joga sem conta.
+      </p>
+      <div className="form-stack">
+        {message ? <p className="form-message">{message}</p> : null}
+        <button
+          className="button primary large google-button"
+          disabled={pending || !isSupabaseConfigured()}
+          onClick={signInWithGoogle}
+        >
+          <GoogleGlyph />
+          {pending ? "Redirecionando…" : "Continuar com Google"}
+        </button>
+      </div>
+      <p className="muted">
+        Prefere treinar sozinho? <Link className="text-link" href="/jogar/ia">Jogar contra a IA</Link>
+      </p>
+    </section>
+  );
 }

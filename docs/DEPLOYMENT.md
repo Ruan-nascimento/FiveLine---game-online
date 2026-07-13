@@ -3,7 +3,7 @@
 ## Checklist de produção
 
 1. Crie Supabase de produção e aplique `supabase db push`.
-2. Habilite e-mail/senha e configure URLs de Site e Redirect para o domínio de produção.
+2. Habilite o provedor **Google** em Authentication → Providers (Client ID/Secret do Google Cloud) e configure Site URL e Redirect URLs (`/auth/callback`) para o domínio de produção.
 3. Adicione `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `NEXT_PUBLIC_APP_URL` no provedor do frontend.
 4. Configure um cron seguro com `service_role` para executar `expire_old_rooms` periodicamente. A Service Role nunca vai para Vercel como variável pública nem para o navegador.
 5. Configure CORS/realtime no projeto Supabase para o domínio publicado.

@@ -1,9 +1,12 @@
-export const APP_NAME = "Linha 5";
-export const APP_TAGLINE = "Alinhe cinco. Antecipe seu adversário. Domine o tabuleiro.";
+export const APP_NAME = "FiveLine";
+export const APP_TAGLINE = "Alinhe cinco. Antecipe. Domine o tabuleiro.";
 export const BOARD_SIZE = 15;
 export const WIN_LENGTH = 5;
 export const HARD_AI_TIME_LIMIT_MS = 900;
 export const AI_THINKING_MIN_MS = 280;
 export const RECONNECT_GRACE_PERIOD_MS = 30_000;
 export const DISCONNECT_FORFEIT_MS = 120_000;
-export const AI_SETTINGS_KEY = "linha5.ai.settings.v1";
+export const TURN_TIME_LIMIT_MS = 30_000;
+export const RESULT_MODAL_AUTO_CLOSE_MS = 20_000;
+export const AI_SETTINGS_KEY = "fiveline.ai.settings.v1";
+export const SOUND_SETTINGS_KEY = "fiveline.sound.enabled";

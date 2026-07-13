@@ -14,4 +14,4 @@ O cliente assina atualizações de `games` no Realtime e sempre relê o estado p
 
 ## Desconexão e revanche
 
-O cliente envia heartbeat a cada 15 segundos. Enquanto estiver offline, o tabuleiro fica desabilitado. Após 120 segundos sem sinal, o participante conectado pode pedir encerramento por desconexão; o servidor é quem confere o tempo. Em uma revanche, os dois jogadores registram aceite em `rematch_requests`; somente o segundo aceite cria uma nova partida, com cores invertidas e histórico anterior preservado.
+O cliente envia heartbeat a cada 15 segundos. Enquanto estiver offline, o tabuleiro fica desabilitado. Após 120 segundos sem sinal, o participante conectado pode pedir encerramento por desconexão; o servidor é quem confere o tempo. Cada turno online tem 30 segundos: se o tempo acaba, a vez passa automaticamente para o adversário (a partida continua). Após o fim da partida, há 20 segundos para pedir revanche. Se um jogador sair, ambos voltam ao lobby. Se os dois aceitam, cria-se uma nova partida imediatamente com cores sorteadas aleatoriamente; o histórico anterior permanece preservado.

@@ -1,4 +1,4 @@
-# Linha 5
+# FiveLine
 
 MVP de Gomoku (Cinco em Linha) com modo público contra IA e multiplayer casual protegido por Supabase. A prioridade é uma partida rápida e clara: tabuleiro 15 × 15, vitória com cinco ou mais peças contínuas e interface responsiva.
 
@@ -37,9 +37,15 @@ Nunca use `SUPABASE_SECRET_KEY` ou `SUPABASE_SERVICE_ROLE_KEY` no navegador ou n
 ## Configuração do Supabase
 
 1. Crie um projeto no Supabase.
-2. Em **Authentication > Providers**, habilite e-mail/senha e configure a URL de redirecionamento local e de produção (`/entrar`).
-3. Copie a URL e a chave anônima pública para `.env.local`.
-4. Vincule o projeto à CLI e aplique a migration:
+2. Em **Authentication → URL Configuration**, defina:
+   - **Site URL**: `http://localhost:3000` (ou seu domínio de produção)
+   - **Redirect URLs**: `http://localhost:3000/auth/callback` e a URL equivalente em produção
+3. Em **Authentication → Providers → Google**, habilite o provedor e preencha **Client ID** e **Client Secret** criados no [Google Cloud Console](https://console.cloud.google.com/apis/credentials):
+   - Tipo: **OAuth 2.0 Client ID** → Aplicativo da Web
+   - **Authorized redirect URI**: `https://SEU_PROJECT_REF.supabase.co/auth/v1/callback`
+   - Sem esse passo, o login retorna `Unsupported provider: provider is not enabled`
+4. Copie a URL e a chave anônima pública para `.env.local`.
+5. Vincule o projeto à CLI e aplique a migration:
 
 ```bash
 supabase link --project-ref SEU_PROJECT_REF
@@ -85,7 +91,7 @@ docs/                     arquitetura, IA, banco e deploy
 
 1. Inicie o Supabase local e aplique a migration.
 2. Inicie `npm run dev`.
-3. Use duas janelas anônimas, crie duas contas com usernames diferentes e confirme e-mails caso a configuração local exija.
+3. Use duas janelas anônimas e entre com duas contas Google diferentes.
 4. Uma pessoa cria uma sala em `/multiplayer/criar`; a outra abre o link copiado ou informa o código em `/multiplayer/entrar`.
 5. Alternativamente, ambas acessam `/multiplayer/buscar` para testar a fila.
 
@@ -98,8 +104,9 @@ O frontend é compatível com Vercel. Adicione as três variáveis públicas aci
 ## Limitações conhecidas
 
 - O repositório não inclui credenciais nem um projeto Supabase; por isso os fluxos externos precisam ser verificados após configuração pelo responsável pelo ambiente.
+- O login com Google exige as migrations aplicadas no projeto remoto. Sem o `handle_new_user` atualizado, o Auth falha com `Database error saving new user` porque o OAuth não envia `username` no metadata.
 - A recuperação de senha envia o e-mail pelo Supabase; a tela de definição de nova senha depende da configuração de redirect e template do projeto.
-- Os sons são uma preferência de interface preparada no setup, mas não há arquivos de áudio distribuídos neste MVP para evitar incluir ativos sem licença.
+- Os sons do jogo são gerados no navegador (Web Audio), sem arquivos de áudio externos. Ficam ligados por padrão (`localStorage` em `fiveline.sound.enabled`).
 - O replay completo ainda mostra o tabuleiro final pela partida; a lista de movimentos está persistida e protegida, mas não há controle de avanço/retrocesso na UI nesta versão.
 
 Consulte [RULES.md](RULES.md) e [INITIALIZATION_RULES.md](INITIALIZATION_RULES.md) antes de alterar o projeto.

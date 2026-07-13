@@ -14,10 +14,28 @@ export interface OnlineGameRecord {
   winning_line: WinningLine;
   winner_player_id: string | null;
   result: "black_win" | "white_win" | "draw" | null;
-  result_reason: "five_in_row" | "resignation" | "disconnect" | "board_full" | null;
+  result_reason: "five_in_row" | "resignation" | "disconnect" | "board_full" | "turn_timeout" | null;
   room_code: string | null;
+  turn_deadline_at: string | null;
+  rematch_game_id: string | null;
+  rematch_declined_at: string | null;
   created_at: string;
   finished_at: string | null;
+}
+
+export interface GameMessage {
+  id: number;
+  game_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+}
+
+export interface PlayerProfile {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_key: string | null;
 }
 
 export interface OnlineGameState {

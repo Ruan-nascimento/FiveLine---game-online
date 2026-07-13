@@ -1,9 +1,89 @@
 import Link from "next/link";
-import { ArrowRight, BrainCircuit, Users, LockKeyhole, Check } from "lucide-react";
-import { APP_TAGLINE } from "@/lib/constants/app";
+import { ArrowRight, Bot, KeyRound, Swords } from "lucide-react";
+import { BoardMark } from "@/components/brand/BoardMark";
+import { GoogleGlyph } from "@/components/brand/GoogleGlyph";
+import { APP_NAME, APP_TAGLINE } from "@/lib/constants/app";
 
-function MiniBoard(): React.ReactElement { return <div className="mini-board" aria-label="Demonstração de um tabuleiro com cinco peças alinhadas">{Array.from({ length: 81 }, (_, index) => <span className={[30, 40, 50, 60, 70].includes(index) ? "mini-piece dark" : [31, 41, 51, 61].includes(index) ? "mini-piece light" : ""} key={index} />)}</div>; }
+function HeroBoard(): React.ReactElement {
+  const dark = new Set([30, 40, 50, 60, 70]);
+  const light = new Set([31, 41, 51, 61, 39]);
+  return (
+    <div className="hero-stage" aria-hidden="true">
+      <div className="hero-board-glow" />
+      <div className="mini-board hero-mini-board" aria-label="Demonstração de um tabuleiro com cinco peças alinhadas">
+        {Array.from({ length: 81 }, (_, index) => (
+          <span
+            key={index}
+            className={dark.has(index) ? "mini-piece dark" : light.has(index) ? "mini-piece light" : undefined}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function HomePage() {
-  return <div className="landing"><section className="hero"><div className="hero-copy"><p className="eyebrow">Estratégia em cada jogada</p><h1>{APP_TAGLINE}</h1><p className="hero-lede">Um clássico de estratégia, redesenhado para partidas rápidas no seu ritmo. Comece contra a IA — sem conta.</p><div className="action-row"><Link className="button primary" href="/jogar">Jogar agora <ArrowRight size={18} /></Link><Link className="button secondary" href="/como-jogar">Como jogar</Link></div><p className="hint"><Check size={16} /> Sem cadastro para jogar contra a IA</p></div><div className="hero-board"><MiniBoard /><div className="board-caption"><BrainCircuit size={18} /> IA com 3 níveis de desafio</div></div></section><section className="steps"><p className="eyebrow">Comece em segundos</p><h2>Uma regra. Muitas possibilidades.</h2><div className="step-grid"><article><span>01</span><h3>Escolha seu modo</h3><p>Treine contra a IA ou entre para desafiar outras pessoas.</p></article><article><span>02</span><h3>Posicione sua peça</h3><p>Construa suas linhas e interrompa os planos do adversário.</p></article><article><span>03</span><h3>Alinhe cinco</h3><p>Vence quem formar uma linha contínua antes.</p></article></div></section><section className="mode-grid"><article><BrainCircuit /><h3>Contra IA</h3><p>Três dificuldades para aprender, treinar e evoluir.</p><Link href="/jogar/ia">Treinar agora →</Link></article><article><Users /><h3>Partida casual</h3><p>Encontre um adversário para uma partida sem ranking.</p><Link href="/multiplayer">Ir ao multiplayer →</Link></article><article><LockKeyhole /><h3>Sala privada</h3><p>Crie um código e desafie alguém que você conhece.</p><Link href="/multiplayer/criar">Criar sala →</Link></article></section><section className="account-callout"><div><p className="eyebrow">Quando quiser competir</p><h2>Crie uma conta gratuita.</h2><p>Salve seu histórico e jogue partidas online em tempo real.</p></div><Link className="button primary" href="/cadastrar">Criar conta</Link></section></div>;
+  return (
+    <div className="landing">
+      <section className="hero">
+        <div className="hero-copy">
+          <p className="brand-lockup">
+            <BoardMark size={42} />
+            <span>{APP_NAME}</span>
+          </p>
+          <h1>{APP_TAGLINE}</h1>
+          <p className="hero-lede">
+            Partidas rápidas de estratégia no tabuleiro 15×15. Entre contra a IA agora — sem conta.
+          </p>
+          <div className="action-row">
+            <Link className="button primary play-cta" href="/jogar">
+              Jogar agora <ArrowRight size={18} />
+            </Link>
+            <Link className="button secondary" href="/como-jogar">
+              Como jogar
+            </Link>
+          </div>
+        </div>
+        <HeroBoard />
+      </section>
+
+      <section className="modes-section">
+        <div className="section-head">
+          <p className="eyebrow">Escolha sua partida</p>
+          <h2>Três formas de jogar</h2>
+        </div>
+        <div className="mode-grid">
+          <Link className="mode-tile" href="/jogar/ia">
+            <Bot size={22} />
+            <h3>Contra a IA</h3>
+            <p>Treine sozinho em três níveis. Sem cadastro.</p>
+            <span>Começar →</span>
+          </Link>
+          <Link className="mode-tile" href="/multiplayer">
+            <Swords size={22} />
+            <h3>Partida online</h3>
+            <p>Encontre alguém e dispute em tempo real.</p>
+            <span>Multiplayer →</span>
+          </Link>
+          <Link className="mode-tile" href="/multiplayer/criar">
+            <KeyRound size={22} />
+            <h3>Sala privada</h3>
+            <p>Gere um código e desafie quem você quiser.</p>
+            <span>Criar sala →</span>
+          </Link>
+        </div>
+      </section>
+
+      <section className="account-callout">
+        <div>
+          <p className="eyebrow">Conta</p>
+          <h2>Entre com Google para jogar online</h2>
+          <p>Salve o histórico, use o chat e dispute partidas ao vivo.</p>
+        </div>
+        <Link className="button primary google-button" href="/entrar">
+          <GoogleGlyph /> Continuar com Google
+        </Link>
+      </section>
+    </div>
+  );
 }

@@ -1,5 +1,14 @@
-import Link from "next/link";
-import { BrainCircuit, Users, DoorOpen, LockKeyhole } from "lucide-react";
+import { Suspense } from "react";
+import { PlayOptions } from "@/components/game/PlayOptions";
 
-const options = [{ href: "/jogar/ia", icon: BrainCircuit, title: "Jogar contra IA", text: "Treinamento individual, três níveis e início imediato.", note: "Não exige conta" }, { href: "/multiplayer/buscar", icon: Users, title: "Busca rápida", text: "Encontre outra pessoa para uma partida casual.", note: "Exige conta" }, { href: "/multiplayer/criar", icon: LockKeyhole, title: "Criar sala", text: "Gere um código e um link para convidar alguém.", note: "Exige conta" }, { href: "/multiplayer/entrar", icon: DoorOpen, title: "Entrar em sala", text: "Use o código compartilhado pelo anfitrião.", note: "Exige conta" }];
-export default function PlayPage() { return <section className="page-shell"><p className="eyebrow">Escolha seu próximo desafio</p><h1>Como você quer jogar?</h1><div className="play-options">{options.map(({ href, icon: Icon, title, text, note }) => <Link href={href} className="play-option" key={title}><Icon /><span className="option-note">{note}</span><h2>{title}</h2><p>{text}</p><span>Continuar →</span></Link>)}</div></section>; }
+export default function PlayPage() {
+  return (
+    <section className="page-shell">
+      <p className="eyebrow">Escolha seu próximo desafio</p>
+      <h1>Como você quer jogar?</h1>
+      <Suspense fallback={<p className="muted">Carregando opções…</p>}>
+        <PlayOptions />
+      </Suspense>
+    </section>
+  );
+}

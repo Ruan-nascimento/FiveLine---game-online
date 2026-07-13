@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw, Flag, BrainCircuit } from "lucide-react";
+import { RotateCcw, Flag, Bot } from "lucide-react";
 import { GomokuBoard } from "./GomokuBoard";
 import { GameResultModal } from "./GameResultModal";
 import { TurnIndicator } from "./TurnIndicator";
@@ -28,7 +28,7 @@ export function AIGame({ difficulty, localPlayer }: { difficulty: AIDifficulty; 
         <h1>Partida em andamento</h1>
         <div className="player-card active-player"><span className={`player-stone stone-${localPlayer}`} /><div><strong>Você</strong><span>{localPlayer === 1 ? "Peças pretas" : "Peças brancas"}</span></div></div>
         <div className="versus">VS</div>
-        <div className="player-card"><span className={`player-stone stone-${game.aiPlayer}`} /><div><strong>IA Estratégica</strong><span>{game.aiPlayer === 1 ? "Peças pretas" : "Peças brancas"}</span></div><BrainCircuit size={19} /></div>
+        <div className="player-card"><span className={`player-stone stone-${game.aiPlayer}`} /><div><strong>IA Estratégica</strong><span>{game.aiPlayer === 1 ? "Peças pretas" : "Peças brancas"}</span></div><Bot size={19} /></div>
         <div className="status-card"><span className="status-dot" />{status}</div>
         {!game.result ? <TurnIndicator player={game.currentPlayer} label={localTurn ? "Você" : "A IA"} /> : null}
         <p className="move-count">{game.moveCount} {game.moveCount === 1 ? "jogada" : "jogadas"}</p>
