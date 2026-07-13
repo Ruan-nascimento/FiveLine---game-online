@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BoardMark } from "@/components/brand/BoardMark";
 import { PlayerAvatar } from "@/components/ui/PlayerAvatar";
@@ -9,10 +10,20 @@ import { APP_NAME } from "@/lib/constants/app";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { syncProfileAvatar } from "@/lib/supabase/avatar";
 
+const marketingLinks = [
+  { href: "/", label: "Início" },
+  { href: "/jogar", label: "Jogar" },
+  { href: "/historico", label: "Classificação" },
+  { href: "/como-jogar", label: "Sobre" },
+  { href: "/termos", label: "Novidades" },
+];
+
 export function SiteHeader(): React.ReactElement {
+  const pathname = usePathname();
   const [username, setUsername] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -40,26 +51,46 @@ export function SiteHeader(): React.ReactElement {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   return (
     <header className="site-header">
       <Link href="/" className="brand" aria-label={`${APP_NAME}, página inicial`}>
         <BoardMark size={26} />
         <span>{APP_NAME}</span>
       </Link>
-      <nav className="main-nav" aria-label="Navegação principal">
-        <Link href="/jogar">Jogar</Link>
-        <Link href="/como-jogar">Como jogar</Link>
-        {isSupabaseConfigured() && username ? <Link href="/multiplayer">Multiplayer</Link> : null}
+
+      <nav className={`main-nav ${menuOpen ? "open" : ""}`} aria-label="Navegação principal">
+        {marketingLinks.map((link) => (
+          <Link key={link.href} href={link.href} className={pathname === link.href ? "nav-active" : undefined}>
+            {link.label}
+          </Link>
+        ))}
+        {isSupabaseConfigured() && username ? <Link href="/multiplayer">Multijogador</Link> : null}
         {!loading && username ? (
           <Link className="nav-account profile-link" href="/perfil">
             <PlayerAvatar src={avatar} name={username} size={22} />
             {username}
           </Link>
         ) : (
-          <Link className="nav-account" href="/entrar">Entrar</Link>
+          <div className="header-auth">
+            <Link className="button ghost" href="/entrar">Entrar</Link>
+            <Link className="button accent" href="/entrar">Criar conta</Link>
+          </div>
         )}
       </nav>
-      <Menu className="mobile-menu-icon" aria-label="Menu de navegação" />
+
+      <button
+        type="button"
+        className="mobile-menu-toggle"
+        aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+        aria-expanded={menuOpen}
+        onClick={() => setMenuOpen((open) => !open)}
+      >
+        {menuOpen ? <X size={22} /> : <Menu size={22} />}
+      </button>
     </header>
   );
 }
