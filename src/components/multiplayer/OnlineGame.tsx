@@ -453,7 +453,7 @@ export function OnlineGame({ gameId }: { gameId: string }): React.ReactElement {
         </div>
 
         <aside className="game-sidebar">
-          <p className="eyebrow">Multiplayer casual</p>
+          <p className="eyebrow">Multijogador casual</p>
           <h1>{game.status === "finished" ? "Partida encerrada" : `${localNick} vs ${opponentNick}`}</h1>
 
           <div className={`player-card ${game.current_player === 1 ? "active-player" : ""}`}>
@@ -482,7 +482,9 @@ export function OnlineGame({ gameId }: { gameId: string }): React.ReactElement {
           <TurnTimer deadline={game.turn_deadline_at} active={game.status === "active"} />
           <p className="move-count">{game.move_count} {game.move_count === 1 ? "jogada" : "jogadas"}</p>
 
-          {game.status === "waiting" && game.room_code ? <RoomCode code={game.room_code} gameId={game.id} /> : null}
+          {game.status === "waiting" && game.room_code ? (
+            <RoomCode code={game.room_code} gameId={game.id} isPublic={Boolean(game.is_public)} />
+          ) : null}
           {message ? <p className="form-message">{message}</p> : null}
 
           <div className="game-actions desktop-actions">

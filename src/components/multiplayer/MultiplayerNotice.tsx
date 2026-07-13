@@ -8,7 +8,7 @@ export function MultiplayerNotice(): React.ReactElement | null {
   if (isSupabaseConfigured()) return null;
   return (
     <div className="multiplayer-notice">
-      <strong>Multiplayer ainda não configurado.</strong>
+      <strong>Multijogador ainda não configurado.</strong>
       <span>Adicione as variáveis do Supabase e execute a migration incluída para ativar conta, salas e partidas em tempo real.</span>
     </div>
   );

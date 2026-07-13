@@ -3,27 +3,68 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { LogOut, Save, Settings } from "lucide-react";
+import { GameHistoryList, resultFor } from "@/components/profile/GameHistoryList";
+import { PlayerAvatar } from "@/components/ui/PlayerAvatar";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
-import type { OnlineGameRecord } from "@/features/multiplayer/types";
+import type { OnlineGameRecord, PlayerProfile } from "@/features/multiplayer/types";
 
 interface AccountData {
   username: string;
   displayName: string;
   email: string;
   createdAt: string;
+  avatar: string | null;
   games: OnlineGameRecord[];
+  profiles: Record<string, PlayerProfile>;
   userId: string;
 }
 
-function resultFor(game: OnlineGameRecord, userId: string): "Vitória" | "Derrota" | "Empate" {
-  if (game.result === "draw") return "Empate";
-  return game.winner_player_id === userId ? "Vitória" : "Derrota";
+async function loadGamesWithProfiles(
+  supabase: NonNullable<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<{ games: OnlineGameRecord[]; profiles: Record<string, PlayerProfile> }> {
+  const { data: games, error } = await supabase
+    .from("games")
+    .select("*")
+    .or(`black_player_id.eq.${userId},white_player_id.eq.${userId}`)
+    .eq("status", "finished")
+    .order("finished_at", { ascending: false })
+    .limit(40);
+
+  if (error || !games) return { games: [], profiles: {} };
+
+  const typedGames = games as unknown as OnlineGameRecord[];
+  const ids = new Set<string>();
+  for (const game of typedGames) {
+    if (game.black_player_id) ids.add(game.black_player_id);
+    if (game.white_player_id) ids.add(game.white_player_id);
+  }
+
+  const profiles: Record<string, PlayerProfile> = {};
+  if (ids.size > 0) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_key")
+      .in("id", [...ids]);
+    for (const profile of (data ?? []) as PlayerProfile[]) profiles[profile.id] = profile;
+  }
+
+  return { games: typedGames, profiles };
 }
 
-export function PlayerAccount({ historyOnly = false }: { historyOnly?: boolean }): React.ReactElement {
+export function PlayerAccount({
+  historyOnly = false,
+  profileUsername,
+}: {
+  historyOnly?: boolean;
+  /** When set, shows another player's public profile (read-only). */
+  profileUsername?: string;
+}): React.ReactElement {
+  const isPublic = Boolean(profileUsername);
   const [account, setAccount] = useState<AccountData | null>(null);
+  const [viewerId, setViewerId] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState("");
-  const [message, setMessage] = useState("Carregando seu perfil…");
+  const [message, setMessage] = useState("Carregando…");
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -37,34 +78,65 @@ export function PlayerAccount({ historyOnly = false }: { historyOnly?: boolean }
         setMessage("Entre na sua conta para acessar esta página.");
         return;
       }
-      const [{ data: profile }, { data: games, error }] = await Promise.all([
-        supabase.from("profiles").select("username, display_name, created_at").eq("id", user.id).single(),
-        supabase.from("games").select("*").or(`black_player_id.eq.${user.id},white_player_id.eq.${user.id}`).eq("status", "finished").order("finished_at", { ascending: false }).limit(30),
-      ]);
-      if (error) {
-        setMessage("Não foi possível carregar o histórico.");
+      setViewerId(user.id);
+
+      if (profileUsername) {
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("id, username, display_name, avatar_key, created_at")
+          .eq("username", profileUsername.toLowerCase())
+          .maybeSingle();
+        if (error || !profile) {
+          setMessage("Jogador não encontrado.");
+          return;
+        }
+        const typed = profile as PlayerProfile & { created_at: string };
+        const { games, profiles } = await loadGamesWithProfiles(supabase, typed.id);
+        setAccount({
+          username: typed.username,
+          displayName: typed.display_name?.trim() || typed.username,
+          email: "",
+          createdAt: typed.created_at,
+          avatar: typed.avatar_key,
+          games,
+          profiles,
+          userId: typed.id,
+        });
+        setMessage("");
         return;
       }
-      const typedProfile = profile as { username: string; display_name: string | null; created_at: string } | null;
+
+      const [{ data: profile }, history] = await Promise.all([
+        supabase.from("profiles").select("username, display_name, created_at, avatar_key").eq("id", user.id).single(),
+        loadGamesWithProfiles(supabase, user.id),
+      ]);
+      const typedProfile = profile as {
+        username: string;
+        display_name: string | null;
+        created_at: string;
+        avatar_key: string | null;
+      } | null;
       const nick = typedProfile?.display_name ?? typedProfile?.username ?? "Jogador";
       setAccount({
         username: typedProfile?.username ?? "jogador",
         displayName: nick,
         email: user.email ?? "Conta Google",
         createdAt: typedProfile?.created_at ?? user.created_at,
-        games: (games ?? []) as unknown as OnlineGameRecord[],
+        avatar: typedProfile?.avatar_key ?? null,
+        games: history.games,
+        profiles: history.profiles,
         userId: user.id,
       });
       setDisplayName(typedProfile?.display_name ?? typedProfile?.username ?? "");
       setMessage("");
     };
     void load();
-  }, []);
+  }, [profileUsername]);
 
   const saveProfile = async (event: FormEvent) => {
     event.preventDefault();
     const supabase = createClient();
-    if (!supabase || !account) return;
+    if (!supabase || !account || isPublic) return;
     setSaving(true);
     setSaveMessage(null);
     const { error } = await supabase
@@ -98,33 +170,43 @@ export function PlayerAccount({ historyOnly = false }: { historyOnly?: boolean }
     );
   }
 
-  const wins = account.games.filter((game) => resultFor(game, account.userId) === "Vitória").length;
-  const losses = account.games.filter((game) => resultFor(game, account.userId) === "Derrota").length;
+  const subjectId = account.userId;
+  const wins = account.games.filter((game) => resultFor(game, subjectId) === "Vitória").length;
+  const losses = account.games.filter((game) => resultFor(game, subjectId) === "Derrota").length;
   const draws = account.games.length - wins - losses;
+  const isOwnProfile = viewerId === account.userId;
 
   return (
     <section className="page-shell">
       <div className="profile-header">
-        <div>
-          <p className="eyebrow">{historyOnly ? "Histórico de partidas" : "Seu perfil"}</p>
-          <h1>{historyOnly ? "Suas partidas" : `Olá, ${account.displayName}`}</h1>
-          {!historyOnly ? (
-            <p className="muted">
-              @{account.username} · Conta criada em {new Date(account.createdAt).toLocaleDateString("pt-BR")}
+        <div className="profile-identity">
+          <PlayerAvatar src={account.avatar} name={account.displayName} size={64} />
+          <div>
+            <p className="eyebrow">
+              {historyOnly ? "Histórico de partidas" : isPublic ? "Perfil do jogador" : "Seu perfil"}
             </p>
-          ) : null}
+            <h1>{historyOnly && isOwnProfile ? "Seu histórico" : account.displayName}</h1>
+            <p className="muted">
+              @{account.username}
+              {!historyOnly ? ` · Conta criada em ${new Date(account.createdAt).toLocaleDateString("pt-BR")}` : null}
+            </p>
+          </div>
         </div>
         <div className="action-row">
-          {!historyOnly ? (
+          {!historyOnly && isOwnProfile ? (
             <button className="button secondary" onClick={() => setShowSettings((value) => !value)}>
               <Settings size={16} /> {showSettings ? "Fechar painel" : "Configurações"}
             </button>
           ) : null}
-          <button className="button secondary" onClick={logout}><LogOut size={16} /> Sair</button>
+          {isOwnProfile ? (
+            <button className="button secondary" onClick={logout}><LogOut size={16} /> Sair</button>
+          ) : (
+            <Link className="button secondary" href="/historico">Voltar ao histórico</Link>
+          )}
         </div>
       </div>
 
-      {!historyOnly && showSettings ? (
+      {!historyOnly && isOwnProfile && showSettings ? (
         <section className="profile-settings">
           <h2>Configurações da conta</h2>
           <form className="form-stack" onSubmit={saveProfile}>
@@ -149,29 +231,15 @@ export function PlayerAccount({ historyOnly = false }: { historyOnly?: boolean }
         </section>
       ) : null}
 
-      {!historyOnly ? (
-        <div className="stats-grid">
-          <article><strong>{account.games.length}</strong><span>Partidas</span></article>
-          <article><strong>{wins}</strong><span>Vitórias</span></article>
-          <article><strong>{losses}</strong><span>Derrotas</span></article>
-          <article><strong>{draws}</strong><span>Empates</span></article>
-        </div>
-      ) : null}
-
-      <div className="history-list">
-        {account.games.length === 0 ? (
-          <p className="muted">Nenhuma partida concluída ainda.</p>
-        ) : (
-          account.games.map((game) => (
-            <Link href={`/partida/${game.id}`} className="history-row" key={game.id}>
-              <strong>{resultFor(game, account.userId)}</strong>
-              <span>{game.result === "draw" ? "Empate" : game.black_player_id === account.userId ? "Peças pretas" : "Peças brancas"}</span>
-              <span>{game.move_count} jogadas</span>
-              <time>{game.finished_at ? new Date(game.finished_at).toLocaleDateString("pt-BR") : ""}</time>
-            </Link>
-          ))
-        )}
+      <div className="stats-grid">
+        <article><strong>{account.games.length}</strong><span>Partidas</span></article>
+        <article><strong className="stat-win">{wins}</strong><span>Vitórias</span></article>
+        <article><strong className="stat-loss">{losses}</strong><span>Derrotas</span></article>
+        <article><strong>{draws}</strong><span>Empates</span></article>
       </div>
+
+      <h2 className="history-heading">{isOwnProfile ? "Partidas recentes" : `Histórico de ${account.displayName}`}</h2>
+      <GameHistoryList games={account.games} viewerId={subjectId} profiles={account.profiles} />
     </section>
   );
 }

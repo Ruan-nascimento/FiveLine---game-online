@@ -22,6 +22,7 @@ export async function proxy(request: NextRequest) {
     path.startsWith("/multiplayer") ||
     path.startsWith("/perfil") ||
     path.startsWith("/historico") ||
+    path.startsWith("/jogador") ||
     (path.startsWith("/partida/") && !path.startsWith("/partida/ia"));
   if (!user && isProtected) {
     const redirectUrl = request.nextUrl.clone();

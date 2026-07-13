@@ -1,5 +1,5 @@
 export const APP_NAME = "FiveLine";
-export const APP_TAGLINE = "Alinhe cinco. Antecipe. Domine o tabuleiro.";
+export const APP_TAGLINE = "Pense à frente. Alinhe cinco. Domine o tabuleiro.";
 export const BOARD_SIZE = 15;
 export const WIN_LENGTH = 5;
 export const HARD_AI_TIME_LIMIT_MS = 900;

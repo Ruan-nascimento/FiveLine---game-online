@@ -19,6 +19,7 @@ export interface OnlineGameRecord {
   turn_deadline_at: string | null;
   rematch_game_id: string | null;
   rematch_declined_at: string | null;
+  is_public?: boolean;
   created_at: string;
   finished_at: string | null;
 }
