@@ -9,8 +9,8 @@ import { GoogleGlyph } from "@/components/brand/GoogleGlyph";
 const options = [
   { href: "/jogar/ia", icon: Bot, title: "Jogar contra IA", text: "Treinamento individual, três níveis e início imediato.", note: "Não exige conta", requiresAuth: false },
   { href: "/multiplayer/buscar", icon: Users, title: "Busca rápida", text: "Encontre outra pessoa para uma partida casual.", note: "Exige conta", requiresAuth: true },
-  { href: "/multiplayer/criar", icon: KeyRound, title: "Criar sala", text: "Gere um código e um link para convidar alguém.", note: "Exige conta", requiresAuth: true },
-  { href: "/multiplayer/entrar", icon: DoorOpen, title: "Entrar em sala", text: "Use o código compartilhado pelo anfitrião.", note: "Exige conta", requiresAuth: true },
+  { href: "/multiplayer/criar", icon: KeyRound, title: "Criar sala", text: "Escolha pública ou privada e compartilhe o código.", note: "Exige conta", requiresAuth: true },
+  { href: "/multiplayer/entrar", icon: DoorOpen, title: "Entrar em sala", text: "Use um código ou entre em uma sala pública da lista.", note: "Exige conta", requiresAuth: true },
 ];
 
 export function PlayOptions(): React.ReactElement {

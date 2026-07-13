@@ -13,7 +13,7 @@ import { syncProfileAvatar } from "@/lib/supabase/avatar";
 const marketingLinks = [
   { href: "/", label: "Início" },
   { href: "/jogar", label: "Jogar" },
-  { href: "/historico", label: "Classificação" },
+  { href: "/historico", label: "Histórico" },
   { href: "/como-jogar", label: "Sobre" },
   { href: "/termos", label: "Novidades" },
 ];

@@ -482,7 +482,9 @@ export function OnlineGame({ gameId }: { gameId: string }): React.ReactElement {
           <TurnTimer deadline={game.turn_deadline_at} active={game.status === "active"} />
           <p className="move-count">{game.move_count} {game.move_count === 1 ? "jogada" : "jogadas"}</p>
 
-          {game.status === "waiting" && game.room_code ? <RoomCode code={game.room_code} gameId={game.id} /> : null}
+          {game.status === "waiting" && game.room_code ? (
+            <RoomCode code={game.room_code} gameId={game.id} isPublic={Boolean(game.is_public)} />
+          ) : null}
           {message ? <p className="form-message">{message}</p> : null}
 
           <div className="game-actions desktop-actions">

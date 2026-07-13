@@ -29,7 +29,7 @@ export function SiteFooter(): React.ReactElement {
             <strong>Jogo</strong>
             <Link href="/">Início</Link>
             <Link href="/jogar">Jogar</Link>
-            <Link href="/historico">Classificação</Link>
+            <Link href="/historico">Histórico</Link>
             <Link href="/como-jogar">Sobre</Link>
           </div>
           <div>
