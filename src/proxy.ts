@@ -1,8 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const protectedPrefixes = ["/multiplayer", "/partida/", "/perfil", "/historico"];
-
 export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -19,7 +17,13 @@ export async function proxy(request: NextRequest) {
     },
   });
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user && protectedPrefixes.some((prefix) => request.nextUrl.pathname.startsWith(prefix))) {
+  const path = request.nextUrl.pathname;
+  const isProtected =
+    path.startsWith("/multiplayer") ||
+    path.startsWith("/perfil") ||
+    path.startsWith("/historico") ||
+    (path.startsWith("/partida/") && !path.startsWith("/partida/ia"));
+  if (!user && isProtected) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/entrar";
     redirectUrl.searchParams.set("next", request.nextUrl.pathname);
