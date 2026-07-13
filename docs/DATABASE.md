@@ -14,7 +14,7 @@ Coordenadas, peças, contagem, usuários distintos e estados de jogo têm constr
 
 ## Funções RPC
 
-`create_private_room`, `join_private_room`, `cancel_private_room`, `find_or_create_match`, `enter_matchmaking`, `leave_matchmaking`, `submit_game_move`, `resign_game`, `request_rematch`, `accept_rematch`, `touch_game_connection` e `handle_disconnected_player` são `security definer`, verificam `auth.uid()` e recebem apenas parâmetros mínimos. `expire_old_rooms` é reservado ao `service_role` para cron.
+`create_private_room`, `join_private_room`, `cancel_private_room`, `find_or_create_match`, `enter_matchmaking`, `leave_matchmaking`, `submit_game_move`, `resign_game`, `request_rematch`, `accept_rematch`, `decline_rematch`, `touch_game_connection` e `handle_disconnected_player` são `security definer`, verificam `auth.uid()` e recebem apenas parâmetros mínimos. `expire_old_rooms` é reservado ao `service_role` para cron.
 
 `submit_game_move` usa bloqueio de linha e faz validação, escrita do movimento, atualização do tabuleiro e determinação de resultado numa única transação. Isso evita condições de corrida e o cliente nunca envia vencedor, turno ou tabuleiro completo.
 
